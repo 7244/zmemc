@@ -25,7 +25,7 @@ typedef struct{
 
 #define BDBT_set_prefix psbdbt
 #define BDBT_set_type_node uint32_t
-#define BDBT_set_MaxKeySize 32
+#define BDBT_set_KeySize sizeof(uint32_t) * 8
 #include <BDBT/BDBT.h>
 
 #define BLL_set_prefix psbll
@@ -247,10 +247,10 @@ void print_perprocess(){
       psbdbt_KeySize_t ki = 0;
       psbdbt_NodeReference_t *psbdbt_nr = &psbdbt_root;
 
-      psbdbt_Query(&psbdbt, true, sizeof(uint32_t) * 8, &sort_value, &ki, &psbdbt_nr);
+      psbdbt_Query(&psbdbt, true, &sort_value, &ki, &psbdbt_nr);
 
       if(ki != sizeof(uint32_t) * 8){
-        psbdbt_Add(&psbdbt, true, sizeof(uint32_t) * 8, &sort_value, ki, *psbdbt_nr, nr);
+        psbdbt_Add(&psbdbt, true, &sort_value, ki, *psbdbt_nr, nr);
         psbll_sicpl(&psbll, nr);
       }
       else{
@@ -274,7 +274,6 @@ void print_perprocess(){
       &tra,
       true,
       psbdbt_BitOrderLow,
-      sizeof(uint32_t) * 8,
       &traversed_key
     )){
       psbll_NodeReference_t nr = tra.Output;

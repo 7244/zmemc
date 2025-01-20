@@ -4,7 +4,6 @@
 
   _start:
     xor rbp, rbp
-    pop rdi
-    mov rsi, rsp
-    and rsp, -16
+    mov rdi, [rsp + 0]
+    lea rsi, [rsp + 8]
     call main

@@ -1,6 +1,8 @@
 ### zmemc is fork of zmem
 
-currently supports clang/AMD64
+supported compilers: clang, gcc
+
+supported cpu architectures: amd64, i386
 
 rest of README is modified README of zmem.
 

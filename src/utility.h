@@ -87,7 +87,13 @@ void *__generic_malloc(uintptr_t size){
   size += sizeof(uintptr_t);
 
   uintptr_t ret = syscall6(
-    __NR_mmap,
+    #if defined(__i386__)
+      __NR_mmap2,
+    #elif defined(__x86_64__)
+      __NR_mmap,
+    #else
+      #error ?
+    #endif
     (uintptr_t)NULL,
     size,
     PROT_READ | PROT_WRITE,

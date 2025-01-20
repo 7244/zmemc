@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## zmemc [0.2.2] - 2025-01-20
+
+### forked from github.com/xeome/Zmem
+
 ## [0.2.0] - 2023-12-08
 
 ### Bug Fixes

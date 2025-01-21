@@ -124,7 +124,7 @@ void main(uintptr_t argc, const uint8_t **argv){
   }
   if(bit == param_perprocess_e){
     print_summary();
-    puts_literal(STDOUT, "\n\n");
+    puts_char_repeat(STDOUT, '\n', 2);
     flush_print();
     print_perprocess();
   }

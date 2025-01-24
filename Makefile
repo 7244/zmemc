@@ -7,10 +7,11 @@ I386_COMPILER = -m32
 
 ARCH = AMD64
 
-LINKER = ld -n --gc-sections -z nosectionheader $($(ARCH)_LINKER)
+LINKER = ld -no-pie -n --gc-sections $($(ARCH)_LINKER)
 
 COMPILER = cc
 COMPILER += -std=c99
+COMPILER += -fno-pic
 COMPILER += -nostdlib -fomit-frame-pointer -fno-stack-protector -ffreestanding -fno-asynchronous-unwind-tables -fdata-sections -ffunction-sections -Qn
 COMPILER += $($(ARCH)_COMPILER)
 COMPILER += -c
@@ -18,6 +19,7 @@ COMPILER += -c
 debug: CFLAGS = -g
 debug: _all
 release: CFLAGS = -O3 -ffast-math -Os
+release: LINKER += -z nosectionheader
 release: _all
 
 _all: _compile _clean

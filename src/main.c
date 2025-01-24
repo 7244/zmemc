@@ -2,13 +2,17 @@
 #define set_program_version "0.2.2"
 
 
+#define FUNC static
+
 #define __platform_nostdlib
-#define __platform_nothread
 #define WITCH_PRE_is_not_allowed
 #define __WITCH_IO_allow_sigpipe
 #define __WITCH_FS_no_cooked
 
 #include <WITCH/WITCH.h>
+#define __generic_alloc_abort
+#define __generic_alloc_confident
+#include <WITCH/generic_alloc.h>
 #include <WITCH/PR/PR.h>
 #include <WITCH/IO/IO.h>
 #include <WITCH/FS/FS.h>
@@ -22,7 +26,7 @@ enum{
   param_help_e
 };
 
-void print_small_help(){
+FUNC void print_small_help(){
   puts_literal(STDERR,
     "\e[4mUsage:\e[m " set_program_name " [OPTIONS]\n"
     "\n"
@@ -30,7 +34,7 @@ void print_small_help(){
   );
 }
 
-void print_help(){
+FUNC void print_help(){
   puts_literal(STDOUT,
     set_program_name " is a Linux memory monitoring program that displays detailed information about virtual memory.\n"
     "\n"

@@ -21,7 +21,7 @@ typedef struct{
   uint64_t swap_on_disk;
 }MemoryStats_t;
 
-void print_summary(){
+FUNC void print_summary(){
   IO_fd_t fd_meminfo;
   if(IO_open("/proc/meminfo", O_RDONLY, &fd_meminfo) != 0){
     _abort();

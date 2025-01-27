@@ -116,7 +116,7 @@ FUNC void perprocess_perthread_process(perprocess_threadglobal_t *tg, pid_string
     while(1){
       const uint8_t *memtypestr = &buffer[i];
       while(i < read_size){
-        if(buffer[i] == ' '){
+        if(buffer[i] == ':'){
           break;
         }
         i++;
@@ -129,13 +129,13 @@ FUNC void perprocess_perthread_process(perprocess_threadglobal_t *tg, pid_string
 
       uint64_t *ptrmem = NULL;
 
-      if(!str_n0ncmp("Rss:", memtypestr, memtypestrsize)){ ptrmem = &ProcessStats.mem.rss; }
-      else if(!str_n0ncmp("Pss:", memtypestr, memtypestrsize)){ ptrmem = &ProcessStats.mem.pss; }
-      else if(!str_n0ncmp("Private_Clean:", memtypestr, memtypestrsize)){ ptrmem = &ProcessStats.mem.uss; }
-      else if(!str_n0ncmp("Private_Dirty:", memtypestr, memtypestrsize)){ ptrmem = &ProcessStats.mem.uss; }
-      else if(!str_n0ncmp("Swap:", memtypestr, memtypestrsize)){ ptrmem = &ProcessStats.mem.swap; }
+      if(!str_n0ncmp("Rss", memtypestr, memtypestrsize)){ ptrmem = &ProcessStats.mem.rss; }
+      else if(!str_n0ncmp("Pss", memtypestr, memtypestrsize)){ ptrmem = &ProcessStats.mem.pss; }
+      else if(!str_n0ncmp("Private_Clean", memtypestr, memtypestrsize)){ ptrmem = &ProcessStats.mem.uss; }
+      else if(!str_n0ncmp("Private_Dirty", memtypestr, memtypestrsize)){ ptrmem = &ProcessStats.mem.uss; }
+      else if(!str_n0ncmp("Swap", memtypestr, memtypestrsize)){ ptrmem = &ProcessStats.mem.swap; }
 
-      i++; /* passed one space after memtype */
+      i++; /* passed colon after memtype */
 
       /* this line is useless for us, lets skip line */
       if(ptrmem == NULL){
@@ -346,7 +346,7 @@ FUNC void perprocess_perthread_entry(perprocess_threadglobal_t *tg){
     goto gt_begin;
   }
 
-  if(!(__atomic_load_n(&tg->pidbits, __ATOMIC_SEQ_CST) & (uint32_t)1 << pid_ctz)){
+  if(!tg->refcount[pid_ctz]){
     /* we didnt lock in time :< */
     __atomic_exchange_n(&tg->spinlock[pid_ctz], 0, __ATOMIC_SEQ_CST);
     goto gt_begin;

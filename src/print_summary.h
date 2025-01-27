@@ -45,7 +45,7 @@ FUNC void print_summary(){
   for(IO_ssize_t i = 0;;){
     const uint8_t *memtypestr = &data[i];
     while(i < read_size){
-      if(data[i] == ' '){
+      if(data[i] == ':'){
         break;
       }
       i++;
@@ -58,23 +58,23 @@ FUNC void print_summary(){
 
     uint64_t *ptrmem = NULL;
 
-    if(!str_n0ncmp("MemTotal:", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.total; }
-    else if(!str_n0ncmp("MemFree:", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.free; }
-    else if(!str_n0ncmp("MemAvailable:", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.available; }
-    else if(!str_n0ncmp("MemUsed:", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.used; }
-    else if(!str_n0ncmp("Shmem:", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.shared; }
-    else if(!str_n0ncmp("Buffers:", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.buffers; }
-    else if(!str_n0ncmp("Cached:", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.cached; }
-    else if(!str_n0ncmp("SwapTotal:", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.swap_total; }
-    else if(!str_n0ncmp("SwapFree:", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.swap_free; }
-    else if(!str_n0ncmp("Zswap:", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.zswap_compressed; }
-    else if(!str_n0ncmp("Zswapped:", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.zswap; }
-    else if(!str_n0ncmp("SwapCached:", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.swap_cached; }
+    if(!str_n0ncmp("MemTotal", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.total; }
+    else if(!str_n0ncmp("MemFree", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.free; }
+    else if(!str_n0ncmp("MemAvailable", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.available; }
+    else if(!str_n0ncmp("MemUsed", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.used; }
+    else if(!str_n0ncmp("Shmem", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.shared; }
+    else if(!str_n0ncmp("Buffers", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.buffers; }
+    else if(!str_n0ncmp("Cached", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.cached; }
+    else if(!str_n0ncmp("SwapTotal", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.swap_total; }
+    else if(!str_n0ncmp("SwapFree", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.swap_free; }
+    else if(!str_n0ncmp("Zswap", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.zswap_compressed; }
+    else if(!str_n0ncmp("Zswapped", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.zswap; }
+    else if(!str_n0ncmp("SwapCached", memtypestr, memtypestrsize)){ ptrmem = &MemoryStats.swap_cached; }
     /* everything here requires kB or size type. next code also expects that */
     /* if you gonna add HugePages_* or something that doesnt contain size type in future, */
     /* you also need to change next code. */
 
-    i++; /* passed one space after memtype */
+    i++; /* passed colon after memtype */
 
     /* this line is useless for us, lets skip line */
     if(ptrmem == NULL){

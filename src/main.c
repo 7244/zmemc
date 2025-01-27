@@ -27,7 +27,7 @@ enum{
 };
 
 FUNC void print_small_help(){
-  puts_literal(STDERR,
+  puts_literal(
     "\e[4mUsage:\e[m " set_program_name " [OPTIONS]\n"
     "\n"
     "For more information, try '--help'.\n"
@@ -35,7 +35,7 @@ FUNC void print_small_help(){
 }
 
 FUNC void print_help(){
-  puts_literal(STDOUT,
+  puts_literal(
     set_program_name " is a Linux memory monitoring program that displays detailed information about virtual memory.\n"
     "\n"
     "\e[4mUsage:\e[m " set_program_name " [OPTIONS]\n"
@@ -65,7 +65,7 @@ void main(uintptr_t argc, const uint8_t **argv){
 
     if(arg[0] == '-' && arg[1] != '-'){
       if(arg[1] == 0 || arg[2] != 0){
-        puts_literal(STDERR,
+        puts_literal(
           "\e[31merror:\e[m - parameters supposed to be one letter.\n"
           "\n"
         );
@@ -78,9 +78,9 @@ void main(uintptr_t argc, const uint8_t **argv){
       else if(arg[1] == 'V'){ param_enum_bits |= 1 << param_version_e; }
       else if(arg[1] == 'h'){ param_enum_bits |= 1 << param_help_e; }
       else{
-        puts_literal(STDERR, "\e[31merror:\e[m unexpected argument '\e[33m-");
-        puts_char_repeat(STDERR, arg[1], 1);
-        puts_literal(STDERR, "\e[m' found\n\n");
+        puts_literal("\e[31merror:\e[m unexpected argument '\e[33m-");
+        puts_char_repeat(arg[1], 1);
+        puts_literal("\e[m' found\n\n");
         print_small_help();
         _exit(1);
       }
@@ -93,21 +93,21 @@ void main(uintptr_t argc, const uint8_t **argv){
       else if(!STR_n0cmp("version", pstr)){ param_enum_bits |= 1 << param_version_e; }
       else if(!STR_n0cmp("help", pstr)){ param_enum_bits |= 1 << param_help_e; }
       else{
-        puts_literal(STDERR, "\e[31merror:\e[m unexpected argument '\e[33m-");
-        puts(STDERR, pstr, MEM_cstreu(pstr));
-        puts_literal(STDERR, "\e[m' found\n\n");
+        puts_literal("\e[31merror:\e[m unexpected argument '\e[33m-");
+        puts(pstr, MEM_cstreu(pstr));
+        puts_literal("\e[m' found\n\n");
         print_small_help();
         _exit(1);
       }
     }
     else{
-      puts_literal(STDERR, "all parameters need to start with - or --\n");
+      puts_literal("all parameters need to start with - or --\n");
       _exit(1);
     }
   }
 
   if(__builtin_popcount(param_enum_bits) > 1){
-    puts_literal(STDERR, "too many parameters.\n");
+    puts_literal("too many parameters.\n");
     _exit(1);
   }
 
@@ -117,18 +117,20 @@ void main(uintptr_t argc, const uint8_t **argv){
 
   uint8_t bit = __builtin_ctz(param_enum_bits);
 
+  utility_print_setfd(STDOUT);
+
   if(bit == param_help_e){
     print_help();
   }
   if(bit == param_version_e){
-    puts_literal(STDOUT, set_program_name " " set_program_version "\n");
+    puts_literal(set_program_name " " set_program_version "\n");
   }
   if(bit == param_summary_e){
     print_summary();
   }
   if(bit == param_perprocess_e){
     print_summary();
-    puts_char_repeat(STDOUT, '\n', 2);
+    puts_char_repeat('\n', 2);
     flush_print();
     print_perprocess();
   }

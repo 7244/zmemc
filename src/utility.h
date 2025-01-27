@@ -9,19 +9,17 @@ uint16_t _utility_print_index;
 uint8_t _utility_print_buffer[0x1000];
 
 FUNC void flush_print(){
-  if(_utility_print_fdint != STDIN){
-    IO_fd_t fd;
-    IO_fd_set(&fd, _utility_print_fdint);
-    IO_write(
-      &fd,
-      _utility_print_buffer,
-      _utility_print_index
-    );
-    _utility_print_index = 0;
-  }
+  IO_fd_t fd;
+  IO_fd_set(&fd, _utility_print_fdint);
+  IO_write(
+    &fd,
+    _utility_print_buffer,
+    _utility_print_index
+  );
+  _utility_print_index = 0;
 }
 FUNC void utility_init_print(){
-  _utility_print_fdint = STDIN;
+  _utility_print_fdint = STDERR;
   _utility_print_index = 0;
 }
 
@@ -30,15 +28,14 @@ FUNC void utility_init_print(){
   PR_exit(val); \
   __unreachable();
 
-FUNC void _utility_print_fd_update(uint32_t fdint){
+FUNC void utility_print_setfd(uint32_t fdint){
   if(_utility_print_fdint != fdint){
     flush_print();
     _utility_print_fdint = fdint;
   }
 }
 
-FUNC void puts(uint32_t fdint, const void *ptr, uintptr_t size){
-  _utility_print_fd_update(fdint);
+FUNC void puts(const void *ptr, uintptr_t size){
   for(uintptr_t i = 0; i < size; i++){
     _utility_print_buffer[_utility_print_index] = ((const uint8_t *)ptr)[i];
     if(++_utility_print_index == sizeof(_utility_print_buffer)){
@@ -46,31 +43,34 @@ FUNC void puts(uint32_t fdint, const void *ptr, uintptr_t size){
     }
   }
 }
-#define puts_literal(fdint, literal) \
-  puts(fdint, literal, sizeof(literal) - 1)
+#define puts_literal(literal) \
+  puts(literal, sizeof(literal) - 1)
 
-FUNC void puts_char_repeat(uint32_t fdint, uint8_t ch, uintptr_t size){
+FUNC void puts_char_repeat(uint8_t ch, uintptr_t size){
   while(size--){
-    puts(fdint, &ch, 1);
+    puts(&ch, 1);
   }
 }
 
-FUNC void utility_puts_number(uint32_t fdint, uint64_t num){
+FUNC void utility_puts_number(uint64_t num){
   uint8_t buf[64];
   uint8_t *buf_ptr;
   uintptr_t size;
 
   buf_ptr = buf;
   STR_uto64(num, 10, &buf_ptr, &size);
-  puts(fdint, buf_ptr, size);
+  puts(buf_ptr, size);
 }
 
 FUNC void _abort(const char *filename, uintptr_t filename_length, uintptr_t line){
-  puts_literal(STDERR, "err at ");
-  puts(STDERR, filename, filename_length);
-  puts_char_repeat(STDERR, ':', 1);
-  utility_puts_number(STDERR, line);
-  puts_char_repeat(STDERR, '\n', 1);
+  utility_print_setfd(STDERR);
+
+  puts_literal("err at ");
+  puts(filename, filename_length);
+  puts_char_repeat(':', 1);
+  utility_puts_number(line);
+  puts_char_repeat('\n', 1);
+
   _exit(1);
 }
 #define _abort() \
@@ -171,13 +171,13 @@ FUNC uint64_t utility_log10(uint64_t num){
 }
 
 FUNC void utility_print_zeropad_num(uintptr_t pad_length, uint64_t num){
-  puts_char_repeat(STDOUT, '0', pad_length - utility_log10(num));
-  utility_puts_number(STDOUT, num);
+  puts_char_repeat('0', pad_length - utility_log10(num));
+  utility_puts_number(num);
 }
 
 FUNC void utility_print_major_minor(uint64_t major, uintptr_t minor_length, uint64_t minor){
-  utility_puts_number(STDOUT, major);
-  puts_char_repeat(STDOUT, '.', 1);
+  utility_puts_number(major);
+  puts_char_repeat('.', 1);
   utility_print_zeropad_num(minor_length, minor);
 }
 
@@ -190,7 +190,7 @@ FUNC void print_sizenumber(uint64_t num_major, uint64_t num_minor, uint8_t Divid
   ;
 
   utility_print_major_minor(num_major, 2, num_minor);
-  puts(STDOUT, &sizetypestr_array[DivideCount * 3], 3);
+  puts(&sizetypestr_array[DivideCount * 3], 3);
 }
 
 #pragma pack(push, 1)
@@ -218,9 +218,9 @@ FUNC void _print_row(
   const print_row_data_t * const row_datas
 ){
   for(uintptr_t i = 0; i < data_size; i++){
-    puts_literal(STDOUT, "\e[");
-    utility_puts_number(STDOUT, row_datas[i].color);
-    puts_char_repeat(STDOUT, 'm', 1);
+    puts_literal("\e[");
+    utility_puts_number(row_datas[i].color);
+    puts_char_repeat('m', 1);
 
     uintptr_t pad_size = row_pads[i % size].length;
 
@@ -263,11 +263,11 @@ FUNC void _print_row(
     }
 
     if(row_pads[i % size].side == 1){
-      puts_char_repeat(STDOUT, ' ', pad_size - text_size);
+      puts_char_repeat(' ', pad_size - text_size);
     }
 
     if(row_datas[i].type == 0){
-      puts(STDOUT, row_datas[i].str, text_size);
+      puts(row_datas[i].str, text_size);
     }
     else if(row_datas[i].type == 1){
       print_sizenumber(num_major, num_minor, DivideCount);
@@ -276,19 +276,19 @@ FUNC void _print_row(
       utility_print_major_minor(num_major, 3, num_minor);
     }
     else if(row_datas[i].type == 3){
-      puts(STDOUT, row_datas[i].str, text_size);
+      puts(row_datas[i].str, text_size);
     }
     else{
       __unreachable();
     }
 
     if(row_pads[i % size].side == 0){
-      puts_char_repeat(STDOUT, ' ', pad_size - text_size);
+      puts_char_repeat(' ', pad_size - text_size);
     }
 
-    puts_literal(STDOUT, "\e[m");
+    puts_literal("\e[m");
 
-    puts_char_repeat(STDOUT, i % size + 1 != size ? ' ' : '\n', 1);
+    puts_char_repeat(i % size + 1 != size ? ' ' : '\n', 1);
   }
 }
 #define print_row(pads, datas) { \

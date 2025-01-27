@@ -369,18 +369,21 @@ FUNC void perprocess_perthread_entry(perprocess_threadglobal_t *tg){
 
 FUNC void print_perprocess(){
 
-  print_padstring_literal(10, "PID");
-  puts_char_repeat(STDOUT, ' ', 1);
-  print_padstring_literal(14, "Swap");
-  puts_char_repeat(STDOUT, ' ', 1);
-  print_padstring_literal(14, "USS");
-  puts_char_repeat(STDOUT, ' ', 1);
-  print_padstring_literal(14, "PSS");
-  puts_char_repeat(STDOUT, ' ', 1);
-  print_padstring_literal(14, "RSS");
-  puts_char_repeat(STDOUT, ' ', 1);
-  print_padstring_literal(14, "COMMAND");
-  puts_char_repeat(STDOUT, '\n', 1);
+  print_row_def(pads, {
+    PRINT_ROW_PAD_(10, 1)
+    PRINT_ROW_PAD_(14, 1)
+    PRINT_ROW_PAD_(14, 1)
+    PRINT_ROW_PAD_(14, 1)
+    PRINT_ROW_PAD_(14, 1)
+    PRINT_ROW_PAD(14, 1)
+  }, {
+    PRINT_ROW_CSTR_(0, "PID")
+    PRINT_ROW_CSTR_(0, "Swap")
+    PRINT_ROW_CSTR_(0, "USS")
+    PRINT_ROW_CSTR_(0, "PSS")
+    PRINT_ROW_CSTR_(0, "RSS")
+    PRINT_ROW_CSTR(0, "COMMAND")
+  });
 
   FS_dir_t dir;
   if(FS_dir_open("/proc", 0, &dir) != 0){
@@ -440,13 +443,14 @@ FUNC void print_perprocess(){
 
         ProcessStats_t *ps = &n->data;
 
-        print_padstring(10, ps->pid.data, ps->pid.length);
-        print_sizenumber(91, 14, ps->mem.swap);
-        print_sizenumber(32, 14, ps->mem.uss);
-        print_sizenumber(34, 14, ps->mem.pss);
-        print_sizenumber(36, 14, ps->mem.rss);
-        print_cmd(ps->command_size, ps->command);
-        puts_char_repeat(STDOUT, '\n', 1);
+        print_row_call(pads, {
+          PRINT_ROW_STR_(0, ps->pid.data, ps->pid.length)
+          PRINT_ROW_SIZENUMBER_(91, ps->mem.swap)
+          PRINT_ROW_SIZENUMBER_(32, ps->mem.uss)
+          PRINT_ROW_SIZENUMBER_(34, ps->mem.pss)
+          PRINT_ROW_SIZENUMBER_(36, ps->mem.rss)
+          PRINT_ROW_STRNOPAD(0, ps->command, ps->command_size)
+        });
 
         nr = n->PrevNodeReference;
       }while(!psbll_inric(nr));

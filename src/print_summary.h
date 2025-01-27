@@ -132,71 +132,77 @@ FUNC void print_summary(){
   MemoryStats.used = MemoryStats.total - MemoryStats.free - MemoryStats.buffers - MemoryStats.cached;
   MemoryStats.swap_used = MemoryStats.swap_total - MemoryStats.swap_free;
   MemoryStats.swap_available = MemoryStats.swap_total - MemoryStats.swap_used;
-  MemoryStats.compression_ratio = MemoryStats.zswap * 1000 / MemoryStats.zswap_compressed;
+  if(MemoryStats.zswap_compressed != 0){
+    MemoryStats.compression_ratio = MemoryStats.zswap * 1000 / MemoryStats.zswap_compressed;
+  }
+  else{
+    MemoryStats.compression_ratio = 0;
+  }
   MemoryStats.totalvmem = MemoryStats.total + MemoryStats.swap_total;
   MemoryStats.freevmem = MemoryStats.free + MemoryStats.swap_free;
   MemoryStats.usedvmem = MemoryStats.used + MemoryStats.swap_used;
   MemoryStats.availablevmem = MemoryStats.available + MemoryStats.swap_available;
   MemoryStats.swap_on_disk = MemoryStats.swap_used - MemoryStats.zswap;
 
-  print_padstring_literal(8, "");
-  puts_char_repeat(STDOUT, ' ', 1);
-  print_padstring_literal(13, "total");
-  puts_char_repeat(STDOUT, ' ', 1);
-  print_padstring_literal(13, "used");
-  puts_char_repeat(STDOUT, ' ', 1);
-  print_padstring_literal(13, "free");
-  puts_char_repeat(STDOUT, ' ', 1);
-  print_padstring_literal(13, "shared");
-  puts_char_repeat(STDOUT, ' ', 1);
-  print_padstring_literal(13, "buff/cache");
-  puts_char_repeat(STDOUT, ' ', 1);
-  print_padstring_literal(13, "available");
-  puts_char_repeat(STDOUT, '\n', 1);
+  print_row({
+    PRINT_ROW_PAD_(8, 0)
+    PRINT_ROW_PAD_(13, 1)
+    PRINT_ROW_PAD_(13, 1)
+    PRINT_ROW_PAD_(13, 1)
+    PRINT_ROW_PAD_(13, 1)
+    PRINT_ROW_PAD_(13, 1)
+    PRINT_ROW_PAD(13, 1)
+  }, {
+    PRINT_ROW_CSTR_(0, "")
+    PRINT_ROW_CSTR_(0, "total")
+    PRINT_ROW_CSTR_(0, "used")
+    PRINT_ROW_CSTR_(0, "free")
+    PRINT_ROW_CSTR_(0, "shared")
+    PRINT_ROW_CSTR_(0, "buff/cache")
+    PRINT_ROW_CSTR_(0, "available")
 
-  puts_literal(STDOUT, "\e[94mMem:    \e[m");
-  print_sizenumber(32, 13, MemoryStats.total);
-  print_sizenumber(91, 13, MemoryStats.used);
-  print_sizenumber(34, 13, MemoryStats.free);
-  print_sizenumber(33, 13, MemoryStats.shared + MemoryStats.buffers);
-  print_sizenumber(35, 13, MemoryStats.cached);
-  print_sizenumber(34, 13, MemoryStats.available);
-  puts_literal(STDOUT, "\n");
+    PRINT_ROW_CSTR_(94, "Mem:")
+    PRINT_ROW_SIZENUMBER_(32, MemoryStats.total)
+    PRINT_ROW_SIZENUMBER_(91, MemoryStats.used)
+    PRINT_ROW_SIZENUMBER_(34, MemoryStats.free)
+    PRINT_ROW_SIZENUMBER_(33, MemoryStats.shared + MemoryStats.buffers)
+    PRINT_ROW_SIZENUMBER_(35, MemoryStats.cached)
+    PRINT_ROW_SIZENUMBER_(34, MemoryStats.available)
 
-  puts_literal(STDOUT, "\e[95mSwap:   \e[m");
-  print_sizenumber(32, 13, MemoryStats.swap_total);
-  print_sizenumber(91, 13, MemoryStats.swap_used);
-  print_sizenumber(34, 13, MemoryStats.swap_free);
-  print_sizenumber(33, 13, 0);
-  print_sizenumber(35, 13, MemoryStats.swap_cached);
-  print_sizenumber(34, 13, MemoryStats.swap_available);
-  puts_literal(STDOUT, "\n");
+    PRINT_ROW_CSTR_(95, "Swap:")
+    PRINT_ROW_SIZENUMBER_(32, MemoryStats.swap_total)
+    PRINT_ROW_SIZENUMBER_(91, MemoryStats.swap_used)
+    PRINT_ROW_SIZENUMBER_(34, MemoryStats.swap_free)
+    PRINT_ROW_SIZENUMBER_(33, 0)
+    PRINT_ROW_SIZENUMBER_(35, MemoryStats.swap_cached)
+    PRINT_ROW_SIZENUMBER_(34, MemoryStats.swap_available)
 
-  puts_literal(STDOUT, "\e[94mTotal:  \e[m");
-  print_sizenumber(32, 13, MemoryStats.totalvmem);
-  print_sizenumber(91, 13, MemoryStats.usedvmem);
-  print_sizenumber(34, 13, MemoryStats.freevmem);
-  print_sizenumber(33, 13, MemoryStats.shared + MemoryStats.buffers);
-  print_sizenumber(35, 13, MemoryStats.cached);
-  print_sizenumber(34, 13, MemoryStats.availablevmem);
-  puts_literal(STDOUT, "\n");
+    PRINT_ROW_CSTR_(94, "Total:")
+    PRINT_ROW_SIZENUMBER_(32, MemoryStats.totalvmem)
+    PRINT_ROW_SIZENUMBER_(91, MemoryStats.usedvmem)
+    PRINT_ROW_SIZENUMBER_(34, MemoryStats.freevmem)
+    PRINT_ROW_SIZENUMBER_(33, MemoryStats.shared + MemoryStats.buffers)
+    PRINT_ROW_SIZENUMBER_(35, MemoryStats.cached)
+    PRINT_ROW_SIZENUMBER(34, MemoryStats.availablevmem)
+  });
 
+  print_row({
+    PRINT_ROW_PAD_(8, 0)
+    PRINT_ROW_PAD_(13, 1)
+    PRINT_ROW_PAD_(13, 1)
+    PRINT_ROW_PAD_(13, 1)
+    PRINT_ROW_PAD_(13, 1)
+  }, {
+    PRINT_ROW_CSTR_(0, "")
+    PRINT_ROW_CSTR_(0, "Zswap")
+    PRINT_ROW_CSTR_(0, "Compressed")
+    PRINT_ROW_CSTR_(0, "Ratio")
+    PRINT_ROW_CSTR_(0, "On Disk")
 
-  print_padstring_literal(8, "");
-  puts_char_repeat(STDOUT, ' ', 1);
-  print_padstring_literal(13, "Zswap");
-  puts_char_repeat(STDOUT, ' ', 1);
-  print_padstring_literal(13, "Compressed");
-  puts_char_repeat(STDOUT, ' ', 1);
-  print_padstring_literal(13, "Ratio");
-  puts_char_repeat(STDOUT, ' ', 1);
-  print_padstring_literal(13, "On Disk");
-  puts_char_repeat(STDOUT, '\n', 1);
-
-  puts_literal(STDOUT, "\e[95mZswap:  \e[m");
-  print_sizenumber(32, 13, MemoryStats.zswap);
-  print_sizenumber(91, 13, MemoryStats.zswap_compressed);
-  print_float(34, MemoryStats.compression_ratio);
-  print_sizenumber(33, 13, MemoryStats.swap_on_disk);
-  puts_char_repeat(STDOUT, '\n', 1);
+    PRINT_ROW_CSTR_(95, "Zswap:")
+    PRINT_ROW_SIZENUMBER_(32, MemoryStats.zswap)
+    PRINT_ROW_SIZENUMBER_(91, MemoryStats.zswap_compressed)
+    PRINT_ROW_FLOAT_(34, MemoryStats.compression_ratio)
+    PRINT_ROW_SIZENUMBER(33, MemoryStats.swap_on_disk)
+  });
 }

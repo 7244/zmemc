@@ -162,13 +162,6 @@ FUNC bool str_n0ncmp(const void *str0, const void *str1, uintptr_t str1size){
   return MEM_cmp(str0, str1, str0size);
 }
 
-FUNC void print_padstring(uintptr_t pad_size, const void *str, uintptr_t size){
-  puts_char_repeat(STDOUT, ' ', pad_size - size);
-  puts(STDOUT, str, size);
-}
-#define print_padstring_literal(pad_size, str) \
-  print_padstring(pad_size, str, sizeof(str) - 1)
-
 FUNC uint64_t utility_log10(uint64_t num){
   uint64_t ret = 1;
   while(num /= 10){
@@ -188,19 +181,7 @@ FUNC void utility_print_major_minor(uint64_t major, uintptr_t minor_length, uint
   utility_print_zeropad_num(minor_length, minor);
 }
 
-FUNC void print_float(const void *color, uintptr_t color_size, uint64_t num){
-  puts_char_repeat(STDOUT, ' ', 1);
-  puts(STDOUT, color, color_size);
-  uint64_t num_major = num / 1000;
-  uint64_t num_minor = num % 1000;
-  puts_char_repeat(STDOUT, ' ', 13 - (utility_log10(num_major) + 1 + 3));
-  utility_print_major_minor(num_major, 3, num_minor);
-  puts_literal(STDOUT, "\e[m");
-}
-#define print_float(color, num) \
-  print_float("\e[" #color "m", sizeof("\e[" #color "m") - 1, num)
-
-FUNC void print_sizenumber(const void *color, uintptr_t color_size, uintptr_t pad_length, uint64_t num){
+FUNC void print_sizenumber(uint64_t num_major, uint64_t num_minor, uint8_t DivideCount){
   const char *sizetypestr_array =
     " kB"
     " MB"
@@ -208,26 +189,160 @@ FUNC void print_sizenumber(const void *color, uintptr_t color_size, uintptr_t pa
     " TB"
   ;
 
-  uint64_t size = num * 100;
-  uint8_t DivideCount = 0;
-  while(size > 1024 * 100){
-    size /= 1024;
-    DivideCount++;
-  }
-
-  puts_char_repeat(STDOUT, ' ', 1);
-  puts(STDOUT, color, color_size);
-  uint64_t num_major = size / 100;
-  uint64_t num_minor = size % 100;
-  puts_char_repeat(STDOUT, ' ', (pad_length - 3) - (utility_log10(num_major) + 1 + 2));
   utility_print_major_minor(num_major, 2, num_minor);
   puts(STDOUT, &sizetypestr_array[DivideCount * 3], 3);
-  puts_literal(STDOUT, "\e[m");
 }
-#define print_sizenumber(color, pad_length, num) \
-  print_sizenumber("\e[" #color "m", sizeof("\e[" #color "m") - 1, pad_length, num)
 
-FUNC void print_cmd(uintptr_t size, const uint8_t *cmd){
-  puts_char_repeat(STDOUT, ' ', 1);
-  puts(STDOUT, cmd, size);
+#pragma pack(push, 1)
+  typedef struct{
+    uint8_t length;
+    bool side;
+  }print_row_pad_t;
+  typedef struct{
+    uint8_t type;
+    uint8_t color;
+    union{
+      struct{
+        const void *str;
+        uintptr_t length;
+      };
+      uint64_t num;
+    };
+  }print_row_data_t;
+#pragma pack(pop)
+
+FUNC void _print_row(
+  uintptr_t size,
+  const print_row_pad_t * const row_pads,
+  uintptr_t data_size,
+  const print_row_data_t * const row_datas
+){
+  for(uintptr_t i = 0; i < data_size; i++){
+    puts_literal(STDOUT, "\e[");
+    utility_puts_number(STDOUT, row_datas[i].color);
+    puts_char_repeat(STDOUT, 'm', 1);
+
+    uintptr_t pad_size = row_pads[i % size].length;
+
+    uint64_t num_major;
+    uint64_t num_minor;
+    uint8_t DivideCount;
+
+    uintptr_t text_size;
+    if(row_datas[i].type == 0){
+      text_size = MEM_cstreu(row_datas[i].str);
+    }
+    else if(row_datas[i].type == 1){
+      uint64_t num = row_datas[i].num * 100;
+      DivideCount = 0;
+      while(num > 1024 * 100){
+        num /= 1024;
+        DivideCount++;
+      }
+
+      num_major = num / 100;
+      num_minor = num % 100;
+
+      text_size = utility_log10(num_major) + 1 + 2 + 3;
+    }
+    else if(row_datas[i].type == 2){
+      num_major = row_datas[i].num / 1000;
+      num_minor = row_datas[i].num % 1000;
+
+      text_size = utility_log10(num_major) + 1 + 3;
+    }
+    else if(row_datas[i].type == 3){
+      text_size = row_datas[i].length;
+    }
+    else if(row_datas[i].type == 4){
+      pad_size = 0;
+      text_size = row_datas[i].length;
+    }
+    else{
+      __unreachable();
+    }
+
+    if(pad_size < text_size){
+      pad_size = text_size;
+    }
+
+    if(row_pads[i % size].side == 1){
+      puts_char_repeat(STDOUT, ' ', pad_size - text_size);
+    }
+
+    if(row_datas[i].type == 0){
+      puts(STDOUT, row_datas[i].str, text_size);
+    }
+    else if(row_datas[i].type == 1){
+      print_sizenumber(num_major, num_minor, DivideCount);
+    }
+    else if(row_datas[i].type == 2){
+      utility_print_major_minor(num_major, 3, num_minor);
+    }
+    else if(row_datas[i].type == 3){
+      puts(STDOUT, row_datas[i].str, text_size);
+    }
+    else if(row_datas[i].type == 4){
+      puts(STDOUT, row_datas[i].str, text_size);
+    }
+    else{
+      __unreachable();
+    }
+
+    if(row_pads[i % size].side == 0){
+      puts_char_repeat(STDOUT, ' ', pad_size - text_size);
+    }
+
+    puts_literal(STDOUT, "\e[m");
+
+    puts_char_repeat(STDOUT, i % size + 1 != size ? ' ' : '\n', 1);
+  }
 }
+#define print_row(pads, datas) { \
+  print_row_pad_t _pads[] = pads; \
+  print_row_data_t _datas[] = datas; \
+  uintptr_t _print_row_size0 = sizeof(_pads) / sizeof(_pads[0]); \
+  uintptr_t _print_row_size1 = sizeof(_datas) / sizeof(_datas[0]); \
+  _print_row(_print_row_size0, _pads, _print_row_size1, _datas); \
+}
+#define print_row_def(name, pads, datas) \
+  print_row_pad_t name[] = pads; \
+  { \
+    print_row_data_t _datas[] = datas; \
+    uintptr_t _print_row_size0 = sizeof(name) / sizeof(name[0]); \
+    uintptr_t _print_row_size1 = sizeof(_datas) / sizeof(_datas[0]); \
+    _print_row(_print_row_size0, name, _print_row_size1, _datas); \
+  }
+#define print_row_call(name, datas) \
+  { \
+    print_row_data_t _datas[] = datas; \
+    uintptr_t _print_row_size0 = sizeof(name) / sizeof(name[0]); \
+    uintptr_t _print_row_size1 = sizeof(_datas) / sizeof(_datas[0]); \
+    _print_row(_print_row_size0, name, _print_row_size1, _datas); \
+  }
+
+#define PRINT_ROW_PAD(length, side) \
+  {length __ca__ side}
+#define PRINT_ROW_PAD_(...) \
+  PRINT_ROW_PAD(__VA_ARGS__) __ca__
+
+#define PRINT_ROW_CSTR(p_color, p_cstr) \
+  {.type = 0 __ca__ .color = p_color __ca__ .str = p_cstr}
+#define PRINT_ROW_CSTR_(...) \
+  PRINT_ROW_CSTR(__VA_ARGS__) __ca__
+#define PRINT_ROW_SIZENUMBER(p_color, val) \
+  {.type = 1 __ca__ .color = p_color __ca__ .num = val}
+#define PRINT_ROW_SIZENUMBER_(...) \
+  PRINT_ROW_SIZENUMBER(__VA_ARGS__) __ca__
+#define PRINT_ROW_FLOAT(p_color, val) \
+  {.type = 2 __ca__ .color = p_color __ca__ .num = val}
+#define PRINT_ROW_FLOAT_(...) \
+  PRINT_ROW_FLOAT(__VA_ARGS__) __ca__
+#define PRINT_ROW_STR(p_color, p_str, p_length) \
+  {.type = 3 __ca__ .color = p_color __ca__ .str = p_str __ca__ .length = p_length}
+#define PRINT_ROW_STR_(...) \
+  PRINT_ROW_STR(__VA_ARGS__) __ca__
+#define PRINT_ROW_STRNOPAD(p_color, p_str, p_length) \
+  {.type = 4 __ca__ .color = p_color __ca__ .str = p_str __ca__ .length = p_length}
+#define PRINT_ROW_STRNOPAD_(...) \
+  PRINT_ROW_STRNOPAD(__VA_ARGS__) __ca__

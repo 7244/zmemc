@@ -254,10 +254,6 @@ FUNC void _print_row(
     else if(row_datas[i].type == 3){
       text_size = row_datas[i].length;
     }
-    else if(row_datas[i].type == 4){
-      pad_size = 0;
-      text_size = row_datas[i].length;
-    }
     else{
       __unreachable();
     }
@@ -280,9 +276,6 @@ FUNC void _print_row(
       utility_print_major_minor(num_major, 3, num_minor);
     }
     else if(row_datas[i].type == 3){
-      puts(STDOUT, row_datas[i].str, text_size);
-    }
-    else if(row_datas[i].type == 4){
       puts(STDOUT, row_datas[i].str, text_size);
     }
     else{
@@ -342,7 +335,3 @@ FUNC void _print_row(
   {.type = 3 __ca__ .color = p_color __ca__ .str = p_str __ca__ .length = p_length}
 #define PRINT_ROW_STR_(...) \
   PRINT_ROW_STR(__VA_ARGS__) __ca__
-#define PRINT_ROW_STRNOPAD(p_color, p_str, p_length) \
-  {.type = 4 __ca__ .color = p_color __ca__ .str = p_str __ca__ .length = p_length}
-#define PRINT_ROW_STRNOPAD_(...) \
-  PRINT_ROW_STRNOPAD(__VA_ARGS__) __ca__

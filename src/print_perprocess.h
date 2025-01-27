@@ -369,7 +369,7 @@ FUNC void perprocess_perthread_entry(perprocess_threadglobal_t *tg){
 
 FUNC void print_perprocess(){
 
-  print_row_def(pads, {
+  print_row_def(rule_row, {
     PRINT_ROW_PAD_(10, 1)
     PRINT_ROW_PAD_(14, 1)
     PRINT_ROW_PAD_(14, 1)
@@ -384,6 +384,8 @@ FUNC void print_perprocess(){
     PRINT_ROW_CSTR_(0, "RSS")
     PRINT_ROW_CSTR(0, "COMMAND")
   });
+
+  rule_row[5].length = 0;
 
   FS_dir_t dir;
   if(FS_dir_open("/proc", 0, &dir) != 0){
@@ -443,13 +445,13 @@ FUNC void print_perprocess(){
 
         ProcessStats_t *ps = &n->data;
 
-        print_row_call(pads, {
+        print_row_call(rule_row, {
           PRINT_ROW_STR_(0, ps->pid.data, ps->pid.length)
           PRINT_ROW_SIZENUMBER_(91, ps->mem.swap)
           PRINT_ROW_SIZENUMBER_(32, ps->mem.uss)
           PRINT_ROW_SIZENUMBER_(34, ps->mem.pss)
           PRINT_ROW_SIZENUMBER_(36, ps->mem.rss)
-          PRINT_ROW_STRNOPAD(0, ps->command, ps->command_size)
+          PRINT_ROW_STR(0, ps->command, ps->command_size)
         });
 
         nr = n->PrevNodeReference;

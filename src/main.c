@@ -106,7 +106,7 @@ void main(uintptr_t argc, const uint8_t **argv){
     }
   }
 
-  if(__builtin_popcount(param_enum_bits) > 1){
+  if(param_enum_bits & param_enum_bits - 1){
     puts_literal("too many parameters.\n");
     _exit(1);
   }
@@ -115,20 +115,18 @@ void main(uintptr_t argc, const uint8_t **argv){
     param_enum_bits |= 1 << param_summary_e;
   }
 
-  uint8_t bit = __builtin_ctz(param_enum_bits);
-
   utility_print_setfd(STDOUT);
 
-  if(bit == param_help_e){
+  if(param_enum_bits & (uint32_t)1 << param_help_e){
     print_help();
   }
-  if(bit == param_version_e){
+  if(param_enum_bits & (uint32_t)1 << param_version_e){
     puts_literal(set_program_name " " set_program_version "\n");
   }
-  if(bit == param_summary_e){
+  if(param_enum_bits & (uint32_t)1 << param_summary_e){
     print_summary();
   }
-  if(bit == param_perprocess_e){
+  if(param_enum_bits & (uint32_t)1 << param_perprocess_e){
     print_summary();
     puts_char_repeat('\n', 2);
     flush_print();

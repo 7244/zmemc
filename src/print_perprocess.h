@@ -40,6 +40,7 @@
 #define BLL_set_NodeDataType ProcessStats_t
 #define BLL_set_Link 1
 #define BLL_set_LinkSentinel 0
+#define BLL_set_OnlyNextLink 1
 #include <BLL/BLL.h>
 
 typedef struct{
@@ -233,10 +234,10 @@ FUNC void perprocess_perthread_process(perprocess_threadglobal_t *tg, pid_string
 
   if(ki != sizeof(uint32_t) * 8){
     psbdbt_Add(tg->psbdbt, true, &sort_value, ki, *psbdbt_nr, nr);
-    psbll_sicpl(tg->psbll, nr);
+    psbll_sicnl(tg->psbll, nr);
   }
   else{
-    psbll_linkNextOfOrphan(tg->psbll, *psbdbt_nr, nr);
+    psbll_linkNextOfOrphan(tg->psbll, nr, *psbdbt_nr);
     *psbdbt_nr = nr;
   }
 
@@ -454,7 +455,7 @@ FUNC void print_perprocess(){
           PRINT_ROW_STR(0, ps->command, ps->command_size)
         });
 
-        nr = n->PrevNodeReference;
+        nr = n->NextNodeReference;
       }while(!psbll_inric(nr));
     }
   }

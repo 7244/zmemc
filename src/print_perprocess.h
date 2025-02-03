@@ -45,6 +45,9 @@
 #define BLL_set_Recycle 0
 #include <BLL/BLL.h>
 
+psbll_t psbll;
+psbdbt_t psbdbt;
+
 #define BME_set_Prefix slock
 #define BME_set_LockValue 1
 #define BME_set_Sleep 0
@@ -66,8 +69,6 @@ typedef struct{
   #endif
 
   slock_t sort_slock;
-  psbll_t *psbll;
-  psbdbt_t *psbdbt;
 
   uint32_t current_thread_count;
   uint32_t maximum_thread_count;
@@ -241,17 +242,17 @@ FUNC void perprocess_perthread_process(perprocess_threadglobal_t *tg, pid_string
 
   while(slock_Lock(&tg->sort_slock));
 
-  psbll_NodeReference_t nr = psbll_NewNode(tg->psbll);
-  psbll_GetNodeByReference(tg->psbll, nr)->data = ProcessStats;
+  psbll_NodeReference_t nr = psbll_NewNode(&psbll);
+  psbll_GetNodeByReference(&psbll, nr)->data = ProcessStats;
 
-  psbdbt_Query(tg->psbdbt, true, &sort_value, &ki, &psbdbt_nr);
+  psbdbt_Query(&psbdbt, true, &sort_value, &ki, &psbdbt_nr);
 
   if(ki != sizeof(uint32_t) * 8){
-    psbdbt_Add(tg->psbdbt, true, &sort_value, ki, *psbdbt_nr, nr);
-    psbll_sicnl(tg->psbll, nr);
+    psbdbt_Add(&psbdbt, true, &sort_value, ki, *psbdbt_nr, nr);
+    psbll_sicnl(&psbll, nr);
   }
   else{
-    psbll_linkNextOfOrphan(tg->psbll, nr, *psbdbt_nr);
+    psbll_linkNextOfOrphan(&psbll, nr, *psbdbt_nr);
     *psbdbt_nr = nr;
   }
 
@@ -410,10 +411,8 @@ FUNC void print_perprocess(){
     _abort();
   }
 
-  psbll_t psbll;
   psbll_Open(&psbll);
 
-  psbdbt_t psbdbt;
   psbdbt_Open(&psbdbt);
 
   /* it gonna be 0 */
@@ -423,9 +422,6 @@ FUNC void print_perprocess(){
     perprocess_threadglobal_t tg;
     /* easier than setting many elements 0 */
     __builtin_memset(&tg, 0, sizeof(tg));
-
-    tg.psbll = &psbll;
-    tg.psbdbt = &psbdbt;
 
     tg.current_thread_count = 1;
     tg.maximum_thread_count = WITCH_num_online_cpus();

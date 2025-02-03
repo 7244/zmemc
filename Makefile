@@ -25,10 +25,8 @@ release: _all
 _all: _compile _clean
 
 _compile:
-	$(COMPILER) -masm=intel src/_start_$(ARCH).S -o _start.S.o && \
 	$(COMPILER) $(CFLAGS) src/main.c -o main.c.o && \
-	$(LINKER) main.c.o _start.S.o -o $(OUTPUT) || true
+	$(LINKER) main.c.o -o $(OUTPUT) || true
 
 _clean:
 	rm -f main.c.o
-	rm -f _start.S.o

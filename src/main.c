@@ -56,7 +56,7 @@ FUNC void print_help(){
 #include "print_perprocess.h"
 
 __attribute__((noreturn))
-void main(uintptr_t argc, const uint8_t **argv){
+FUNC void main(uintptr_t argc, const uint8_t **argv){
 
   #include <WITCH/PlatformOpen.h>
 
@@ -139,3 +139,5 @@ void main(uintptr_t argc, const uint8_t **argv){
 
   _exit(0);
 }
+
+#include <WITCH/include/_start.h>

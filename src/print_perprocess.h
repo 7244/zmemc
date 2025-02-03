@@ -32,6 +32,7 @@
 #define BDBT_set_prefix psbdbt
 #define BDBT_set_type_node uint32_t
 #define BDBT_set_KeySize sizeof(uint32_t) * 8
+#define BDBT_set_Recycle 0
 #include <BDBT/BDBT.h>
 
 #define BLL_set_prefix psbll

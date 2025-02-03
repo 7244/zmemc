@@ -43,15 +43,20 @@
 #define BLL_set_OnlyNextLink 1
 #include <BLL/BLL.h>
 
+#define BME_set_Prefix slock
+#define BME_set_LockValue 1
+#define BME_set_Sleep 0
+#include <BME/BME.h>
+
 typedef struct{
   uint32_t pidbits;
   uint8_t is_producing;
-  uint8_t spinlock[32];
+  slock_t slocks[32];
   uint8_t refcount[32];
   pid_string_t pid[32][16];
   uint16_t totalref;
 
-  uint8_t sort_spinlock;
+  slock_t sort_slock;
   psbll_t *psbll;
   psbdbt_t *psbdbt;
 
@@ -225,7 +230,7 @@ FUNC void perprocess_perthread_process(perprocess_threadglobal_t *tg, pid_string
   psbdbt_NodeReference_t _psbdbt_nr = 0; /* root */
   psbdbt_NodeReference_t *psbdbt_nr = &_psbdbt_nr;
 
-  while(__atomic_exchange_n(&tg->sort_spinlock, 1, __ATOMIC_SEQ_CST));
+  while(slock_Lock(&tg->sort_slock));
 
   psbll_NodeReference_t nr = psbll_NewNode(tg->psbll);
   psbll_GetNodeByReference(tg->psbll, nr)->data = ProcessStats;
@@ -241,7 +246,7 @@ FUNC void perprocess_perthread_process(perprocess_threadglobal_t *tg, pid_string
     *psbdbt_nr = nr;
   }
 
-  __atomic_exchange_n(&tg->sort_spinlock, 0, __ATOMIC_SEQ_CST);
+  slock_Unlock(&tg->sort_slock);
 }
 
 FUNC void perprocess_perthread_entry(perprocess_threadglobal_t *);
@@ -276,7 +281,7 @@ FUNC void perprocess_perthread_produce(perprocess_threadglobal_t *tg){
   while(1){
     uint8_t index = tg->rand_num++ % (sizeof(uint32_t) * 8);
 
-    while(__atomic_exchange_n(&tg->spinlock[index], 1, __ATOMIC_SEQ_CST));
+    while(slock_Lock(&tg->slocks[index]));
 
     if(tg->refcount[index] == 16){
       continue;
@@ -286,7 +291,7 @@ FUNC void perprocess_perthread_produce(perprocess_threadglobal_t *tg){
 
     __atomic_fetch_or(&tg->pidbits, (uint32_t)1 << index, __ATOMIC_SEQ_CST);
 
-    __atomic_exchange_n(&tg->spinlock[index], 0, __ATOMIC_SEQ_CST);
+    slock_Unlock(&tg->slocks[index]);
 
     break;
   }
@@ -343,13 +348,13 @@ FUNC void perprocess_perthread_entry(perprocess_threadglobal_t *tg){
 
   uint32_t pid_ctz = __builtin_ctz(pidbits);
 
-  if(__atomic_exchange_n(&tg->spinlock[pid_ctz], 1, __ATOMIC_SEQ_CST)){
+  if(slock_Lock(&tg->slocks[pid_ctz])){
     goto gt_begin;
   }
 
   if(!tg->refcount[pid_ctz]){
     /* we didnt lock in time :< */
-    __atomic_exchange_n(&tg->spinlock[pid_ctz], 0, __ATOMIC_SEQ_CST);
+    slock_Unlock(&tg->slocks[pid_ctz]);
     goto gt_begin;
   }
 
@@ -359,7 +364,7 @@ FUNC void perprocess_perthread_entry(perprocess_threadglobal_t *tg){
     __atomic_fetch_xor(&tg->pidbits, (uint32_t)1 << pid_ctz, __ATOMIC_SEQ_CST);
   }
 
-  __atomic_exchange_n(&tg->spinlock[pid_ctz], 0, __ATOMIC_SEQ_CST);
+  slock_Unlock(&tg->slocks[pid_ctz]);
 
   __atomic_sub_fetch(&tg->totalref, 1, __ATOMIC_SEQ_CST);
 

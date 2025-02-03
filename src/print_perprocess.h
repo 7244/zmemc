@@ -41,6 +41,7 @@
 #define BLL_set_Link 1
 #define BLL_set_LinkSentinel 0
 #define BLL_set_OnlyNextLink 1
+#define BLL_set_Recycle 0
 #include <BLL/BLL.h>
 
 #define BME_set_Prefix slock

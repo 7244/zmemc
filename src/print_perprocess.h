@@ -46,6 +46,9 @@
 #define BME_set_Prefix slock
 #define BME_set_LockValue 1
 #define BME_set_Sleep 0
+#if set_Verbose
+  #define BME_set_CountLockFail 1
+#endif
 #include <BME/BME.h>
 
 typedef struct{
@@ -55,6 +58,10 @@ typedef struct{
   uint8_t refcount[32];
   pid_string_t pid[32][16];
   uint16_t totalref;
+
+  #if set_Verbose
+    uint64_t slocks_LockedForNothing;
+  #endif
 
   slock_t sort_slock;
   psbll_t *psbll;
@@ -354,6 +361,9 @@ FUNC void perprocess_perthread_entry(perprocess_threadglobal_t *tg){
 
   if(!tg->refcount[pid_ctz]){
     /* we didnt lock in time :< */
+    #if set_Verbose
+      __atomic_add_fetch(&tg->slocks_LockedForNothing, 1, __ATOMIC_SEQ_CST);
+    #endif
     slock_Unlock(&tg->slocks[pid_ctz]);
     goto gt_begin;
   }
@@ -428,6 +438,22 @@ FUNC void print_perprocess(){
     }
 
     FS_dir_traverse_close(&tg.dirtra);
+
+    #if set_Verbose
+      for(uint32_t i = 0; i < sizeof(tg.slocks) / sizeof(tg.slocks[0]); i++){
+        puts_literal("[DEBUG] slocks ");
+        utility_puts_number(i);
+        puts_char_repeat(' ', 1);
+        utility_puts_number(tg.slocks[i].LockFailCount);
+        puts_char_repeat('\n', 1);
+      }
+      puts_literal("[DEBUG] slocks_LockedForNothing ");
+      utility_puts_number(tg.slocks_LockedForNothing);
+      puts_char_repeat('\n', 1);
+      puts_literal("[DEBUG] sort_slock ");
+      utility_puts_number(tg.sort_slock.LockFailCount);
+      puts_char_repeat('\n', 1);
+    #endif
   }
 
   FS_dir_close(&dir);

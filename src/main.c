@@ -1,6 +1,10 @@
 #define set_program_name "zmemc"
 #define set_program_version "0.2.2"
 
+#ifndef set_Verbose
+  #define set_Verbose 0
+#endif
+
 
 #define FUNC static
 
